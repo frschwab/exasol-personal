@@ -5,6 +5,7 @@ package runtimeartifacts
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"compress/gzip"
 	"context"
 	"crypto/sha256"
@@ -992,4 +993,66 @@ func TestManager_GetPlatformSpecificTakesPriorityOverAny(t *testing.T) {
 	if string(content) != string(platformData) {
 		t.Fatalf("expected platform-specific artifact, got %q", string(content))
 	}
+}
+
+func TestManager_GetZipExtraction(t *testing.T) {
+	t.Parallel()
+
+	// Given
+	srcDir := t.TempDir()
+	archivePath := writeZipFixture(t, srcDir, "preset.zip", "tool", "tool-content")
+	cacheDir := t.TempDir()
+	def := ResourceDefinition{
+		Extract: true,
+		Artifact: map[string]ArtifactSpec{
+			anyPlatformKey: {
+				URL:          "file://" + archivePath,
+				ResourcePath: "tool",
+			},
+		},
+	}
+	manager := NewResourceManagerForPlatform(ResourceSpec{}, cacheDir, "linux", "amd64")
+
+	// When
+	path, err := manager.Get(context.Background(), def, "preset")
+	// Then
+	if err != nil {
+		t.Fatalf("expected zip extraction to succeed, got %v", err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("expected extracted file to be readable, got %v", err)
+	}
+	if string(data) != "tool-content" {
+		t.Fatalf("expected %q, got %q", "tool-content", string(data))
+	}
+}
+
+func writeZipFixture(t *testing.T, dir, archiveName, entryName, content string) string {
+	t.Helper()
+
+	archivePath := filepath.Join(dir, archiveName)
+	zipFile, err := os.Create(archivePath)
+	if err != nil {
+		t.Fatalf("failed to create zip fixture: %v", err)
+	}
+	zipWriter := zip.NewWriter(zipFile)
+	fw, err := zipWriter.Create(entryName)
+	if err != nil {
+		_ = zipFile.Close()
+		t.Fatalf("failed to create zip entry: %v", err)
+	}
+	if _, err := fw.Write([]byte(content)); err != nil {
+		_ = zipFile.Close()
+		t.Fatalf("failed to write zip entry: %v", err)
+	}
+	if err := zipWriter.Close(); err != nil {
+		_ = zipFile.Close()
+		t.Fatalf("failed to close zip writer: %v", err)
+	}
+	if err := zipFile.Close(); err != nil {
+		t.Fatalf("failed to close zip file: %v", err)
+	}
+
+	return archivePath
 }
