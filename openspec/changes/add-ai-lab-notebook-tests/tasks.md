@@ -14,7 +14,7 @@
 ## 3. Classification & reporting
 
 - [ ] 3.1 Rule-based classifier: `PASS` / `FAIL (integration)` / `FAIL (upstream)` / `SKIP (needs X)`; default unmatched → `FAIL (integration)`
-- [ ] 3.2 Seed the pattern table with the three known integration signatures (missing docker.sock, short-name registry, `Already exists`) and the known upstream signature (#1489 apt pin)
+- [ ] 3.2 Seed the pattern table with the four known integration signatures (missing docker.sock, socket `PermissionError`, short-name registry, `Already exists`) and the known upstream signature (#1489 apt pin)
 - [ ] 3.3 Write `report.md` + `report.json` (discovered notebooks × result × cause)
 - [ ] 3.4 Exit codes: fail the gate on any `FAIL (integration)`; `FAIL (upstream)` warns by default with a known-issue allowlist (design open question 2)
 
@@ -26,7 +26,7 @@
 ## 5. Validation
 
 - [ ] 5.1 Run the harness locally in ITDE mode; confirm light notebooks (config, BucketFS, SQL) report `PASS`
-- [ ] 5.2 Confirm `export_as_is` reports `FAIL (upstream)` and links #1489 (not `FAIL (integration)`)
+- [ ] 5.2 Confirm `export_as_is` reports `PASS` (pulls the prebuilt image from Docker Hub, no local build); confirm a customize/rebuild notebook reports `FAIL (upstream)` linking #1489 (not `FAIL (integration)`)
 - [ ] 5.3 Confirm credential-gated notebooks report `SKIP (needs X)` with the specific missing requirement
 - [ ] 5.4 Regression check: temporarily revert one of the three `installAiLab.sh` fixes and confirm the harness flips the relevant notebook to `FAIL (integration)` with the right signature
 

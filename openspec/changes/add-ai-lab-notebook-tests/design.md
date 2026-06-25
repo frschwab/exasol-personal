@@ -66,7 +66,8 @@ Coverage is **discovered at runtime**, not hardcoded — the matrix below is the
 |---|---|---|---|
 | Getting started / configuration | main config / "configure the AI Lab" | ✅ (ITDE) | — |
 | Data access / BucketFS | bucketfs access, IMPORT/EXPORT | ✅ (ITDE) | — |
-| Script Languages Container | `script_languages_container/export_as_is`, `customize`, `test_slc`, `advanced`, `using_the_*`, `configure_slc_repository` | ⚠️ heavy; currently blocked | SLC build (disk/CPU); **blocked by #1489** |
+| SLC — export / use | `script_languages_container/export_as_is`, `configure_slc_repository`, `test_slc`, `using_the_*` | ✅ (pulls prebuilt image from Docker Hub; verified 2026-06-25) | socket access (fixes in `installAiLab.sh`) |
+| SLC — customize / rebuild | `customize`, `advanced` | ⛔ blocked | forces a local SLC build → **#1489** (stale flavor apt pins) |
 | SQL / basic analytics | sql examples | ✅ (ITDE) | — |
 | Machine learning (in-DB) | sklearn / in-database training | ✅ (ITDE) likely; verify resources | possibly RAM |
 | Transformers / Hugging Face | `te_*` text-embedding/NLP | ⛔ SKIP by default | Hugging Face token; model downloads; RAM/GPU |
@@ -84,7 +85,7 @@ The harness emits the **actual** matrix each run (discovered notebooks × result
 ## Resource notes & honest limits
 
 - This dev box: 14 CPU / 15 GB / ~933 GB free, **no container runtime installed** — Docker/Podman must be installed to run locally. 15 GB is fine for ITDE + light notebooks; heavy ML notebooks and parallel SLC builds may need a larger target.
-- `export_as_is` will report `FAIL (upstream)` until #1489 (stale flavor apt pins) is resolved; that is correct and informative, not a harness bug.
+- `export_as_is` **passes**: it pulls the prebuilt release image from Docker Hub (verified 2026-06-25 on a clean deploy with an unmodified flavor — 0 local builds), so #1489 does not affect it. Only notebooks that force a local rebuild (`customize` / `advanced`) will report `FAIL (upstream)` until #1489 is resolved; that is correct and informative, not a harness bug.
 - Credential-gated notebooks are intentionally `SKIP` — wiring real cloud/LLM creds into CI is a separate decision with its own security tradeoffs.
 - The harness validates **our integration and the notebooks' executability**, not model quality or numerical results.
 
